@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 import requests
+from urllib.parse import quote
 
 
 def create_app() -> Flask:
@@ -16,14 +17,20 @@ def create_app() -> Flask:
     @app.route("/status", methods=["GET"])
     def status():
         """
-        Proxy to the TFL Line Disruption API.
-        Call with ?lines=victoria or ?lines=victoria,central.
+        Proxy to the TFL Line Status API.
+        Call with:
+          - ?lines=victoria
+          - ?lines=victoria,central
         """
-        lines = request.args.get("lines")
-        if not lines:
-            return jsonify(error="query param 'lines' is required"), 400
+        raw_lines = request.args.get("lines", "")
+        line_args = [part.strip() for part in raw_lines.split(",") if part.strip()]
 
-        url = f"https://api.tfl.gov.uk/Line/{lines}/Status"
+        if not line_args:
+            return jsonify(error="Provide lines via ?lines=a or ?lines=a,b"), 400
+
+        encoded_lines = quote(",".join(line_args), safe="")
+
+        url = f"https://api.tfl.gov.uk/Line/{encoded_lines}/Status"
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()

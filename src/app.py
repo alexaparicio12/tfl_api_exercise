@@ -4,6 +4,7 @@ from flask import Flask, jsonify, request
 import requests
 
 from src.app_utils import (
+    delete_task,
     fetch_disruptions,
     fetch_status,
     generate_task_id,
@@ -12,8 +13,8 @@ from src.app_utils import (
     parse_run_time,
     schedule_task,
     scheduler,
-    store_lock,
     tasks_store,
+    update_task,
 )
 
 
@@ -94,16 +95,52 @@ def create_app() -> Flask:
 
     @app.route("/tasks", methods=["GET"])
     def list_tasks():
-        with store_lock:
-            return jsonify(list(tasks_store.values()))
+        return jsonify(list(tasks_store.values()))
 
     @app.route("/tasks/<task_id>", methods=["GET"])
     def get_task(task_id: str):
-        with store_lock:
-            task = tasks_store.get(task_id)
+        task = tasks_store.get(task_id)
         if not task:
             return jsonify(error="task not found"), 404
         return jsonify(task)
+
+    @app.route("/tasks/<task_id>", methods=["PATCH"])
+    def patch_task(task_id: str):
+        payload = request.get_json(silent=True) or {}
+        lines_raw_provided = "lines" in payload
+        time_provided = "scheduler_time" in payload
+
+        if not lines_raw_provided and not time_provided:
+            return jsonify(error="Provide 'lines' and/or 'scheduler_time' to update"), 400
+
+        new_lines = None
+        if lines_raw_provided:
+            lines_raw = payload.get("lines", "")
+            new_lines = parse_line_ids(lines_raw if isinstance(lines_raw, str) else "")
+            if not new_lines:
+                return jsonify(error="lines must be a comma-separated string"), 400
+
+        run_at = None
+        if time_provided:
+            time_str = payload.get("scheduler_time", "")
+            try:
+                run_at = parse_run_time(time_str)
+            except ValueError as exc:
+                return jsonify(error=str(exc)), 400
+
+        try:
+            updated = update_task(task_id, new_lines, run_at)
+        except KeyError:
+            return jsonify(error="task not found"), 404
+
+        return jsonify(updated)
+
+    @app.route("/tasks/<task_id>", methods=["DELETE"])
+    def remove_task(task_id: str):
+        removed = delete_task(task_id)
+        if not removed:
+            return jsonify(error="task not found"), 404
+        return jsonify(message="task deleted")
 
     return app
 

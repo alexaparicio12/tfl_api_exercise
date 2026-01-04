@@ -93,3 +93,23 @@ We will take a look at it, and if we decide to proceed, we'll get you to take us
 We hope these instructions are clear. If not, please don't hesistate to ask questions. We do not expect you to spend more than a few hours on the task.
 
 Finally, we hope you find this task both challenging and fun!
+
+## Running the sample Flask app with Docker
+
+Build the image:
+
+```
+docker build -t tfl-api-exercise .
+```
+
+Run the container (exposes port 5555):
+
+```
+docker run --rm -p 5555:5555 tfl-api-exercise
+```
+
+Check the health endpoint:
+
+```
+curl http://localhost:5555/health
+```

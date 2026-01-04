@@ -1,0 +1,40 @@
+from flask import Flask, jsonify, request
+import requests
+
+
+def create_app() -> Flask:
+    app = Flask(__name__)
+
+    @app.route("/health", methods=["GET"])
+    def health():
+        return jsonify(status="ok")
+
+    @app.route("/hello", methods=["GET"])
+    def hello():
+        return jsonify(message="hello world")
+
+    @app.route("/status", methods=["GET"])
+    def status():
+        """
+        Proxy to the TFL Line Disruption API.
+        Call with ?lines=victoria or ?lines=victoria,central.
+        """
+        lines = request.args.get("lines")
+        if not lines:
+            return jsonify(error="query param 'lines' is required"), 400
+
+        url = f"https://api.tfl.gov.uk/Line/{lines}/Status"
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            return jsonify(error="failed to reach TFL API", detail=str(exc)), 502
+
+        return jsonify(response.json())
+
+    return app
+
+
+if __name__ == "__main__":
+    application = create_app()
+    application.run(host="0.0.0.0", port=5555)

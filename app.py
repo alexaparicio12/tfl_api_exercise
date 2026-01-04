@@ -22,15 +22,9 @@ def create_app() -> Flask:
           - ?lines=victoria
           - ?lines=victoria,central
         """
-        raw_lines = request.args.get("lines", "")
-        line_args = [part.strip() for part in raw_lines.split(",") if part.strip()]
+        lines = request.args.get("lines", "")
 
-        if not line_args:
-            return jsonify(error="Provide lines via ?lines=a or ?lines=a,b"), 400
-
-        encoded_lines = quote(",".join(line_args), safe="")
-
-        url = f"https://api.tfl.gov.uk/Line/{encoded_lines}/Status"
+        url = f"https://api.tfl.gov.uk/Line/{lines}/Disruption"
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()

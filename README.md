@@ -115,6 +115,7 @@ Run the container (exposes port 5555):
 ```
 docker run --rm -p 5555:5555 tfl-api-exercise
 ```
+The container entrypoint runs `python -m src.app`.
 
 Check the health endpoint:
 

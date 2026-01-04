@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 5555
 
-CMD ["python", "app.py"]
+CMD ["python", "-m", "src.app"]

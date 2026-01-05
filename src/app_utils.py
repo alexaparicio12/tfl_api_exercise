@@ -54,6 +54,7 @@ def fetch_status(line_ids: List[str]) -> Any:
 
 def run_task(task_id: str, line_ids: List[str]) -> None:
     """Job executed by the scheduler."""
+    #@todo: need to handle potential failures of these fetch commands
     try:
         result = fetch_disruptions(line_ids)
         if result == []:

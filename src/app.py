@@ -30,10 +30,6 @@ def create_app() -> Flask:
     def health():
         return jsonify(status="ok")
 
-    @app.route("/hello", methods=["GET"])
-    def hello():
-        return jsonify(message="hello world")
-
     @app.route("/disruptions", methods=["GET"])
     def disruptions():
         """

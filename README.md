@@ -4,7 +4,7 @@
 
 This is the code for an app which connects to the TFL public API and finds any disruptions or relevant status updates for lines at a provided time.
 
-This has been built in approximately 6 hours, and is relatively limited when it comes to the display. Outputs are also not saved in a data store yet.
+This has been built in approximately 6 hours, and is relatively limited when it comes to the display. Outputs are also not saved in a data store yet. Finally, it is not able to handle well many situations in which the calls can break (wrong IDs, times, etc.). I have tried to add try-except logic, but I have not been fully exhaustive.
 
 ### Functionality
 The endpoints supported are:
@@ -111,36 +111,6 @@ task_id,lines,schedule_time
 2,"bakerloo,jubilee",""
 ```
 
-## Scheduling TFL disruption fetches
-
-Create a scheduled task (ISO time `YYYY-MM-DDTHH:MM:SS`):
-
-```
-curl -X POST http://localhost:5555/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"lines":"victoria,central","scheduler_time":"2024-05-01T08:30:00"}'
-```
-
-List tasks:
-
-```
-curl http://localhost:5555/tasks
-```
-
-Fetch a single task (includes result after it runs):
-
-```
-curl http://localhost:5555/tasks/morning-run
-```
-
-Delete a task:
-
-```
-curl -X DELETE http://localhost:5555/tasks/morning-run
-```
-
-## User guide
-
 - **Launch the app locally (no Docker):**
   ```
   python3 -m venv .venv
@@ -150,12 +120,3 @@ curl -X DELETE http://localhost:5555/tasks/morning-run
   ```
   Then check: `curl http://localhost:5555/health`.
 
-- **Run tasks from `data/tasks.csv`:** ensure the file has `task_id,lines,schedule_time` columns. On app start, rows are auto-loaded and scheduled. `schedule_time` may be ISO (`YYYY-MM-DDTHH:MM:SS`), `HH:MM` (today), or empty to run immediately. View loaded tasks/results: `curl http://localhost:5555/tasks`.
-
-- **Add a new task via POST:** (app must be running)
-  ```
-  curl -X POST http://localhost:5555/tasks \
-    -H "Content-Type: application/json" \
-    -d '{"lines":"victoria,central","scheduler_time":"2024-05-01T08:30:00"}'
-  ```
-  `scheduler_time` is optional (empty runs now). `task_id` is auto-generated if omitted.
